@@ -1,3 +1,16 @@
+# Sanal Ortam (En önemlisi, binlerce dosya içerir)
 venv/
+env/
+
+# Python Önbellek Dosyaları
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Çevre Değişkenleri (İleride şifrelerimizi buraya koyacağız)
+.env
+
+# IDE Ayarları (VS Code, PyCharm vb.)
+.vscode/
+.idea/
