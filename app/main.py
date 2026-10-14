@@ -26,6 +26,13 @@ class TaskResponse(TaskCreate):
 class Task(TaskCreate):
     id : int
 
+# Güncelleme yaparken kullanıcının tüm alanları göndermesi zorunlu olmasın diye
+# her alanı Optional yapıyoruz.
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
 
 #Endpointler
 
@@ -78,5 +85,25 @@ def delete_task(task_id: int, db:Session = Depends(get_db)):
     db.commit()
 
     return {"message": f"Görev {task_id} başarıyla silindi."}
+
+@app.patch("/tasks/{task_id}", response_model=TaskResponse)
+def update_task(task_id: int, task_in: TaskUpdate, db: Session = Depends(get_db)):
+    gorev = db.query(DBTask).filter(DBTask.id == task_id).first()
+
+    if not gorev:
+        raise HTTPException(status_code=404, detail = "Güncellenecek görev bulunamadı")
+
+    # 2. Pydantic şablonundan sadece kullanıcının değiştirmek istediği (doldurduğu) alanları al
+    # exclude_unset=True, "kullanıcının boş bıraktığı (göndermediği) alanları yoksay" demektir.
+    update_data = task_in.model_dump(exclude_unset=True)
+
+    # 3. Gelen yeni verileri, veritabanındaki mevcut objenin (gorev) üzerine yaz
+    for key, value in update_data.items():
+        setattr(gorev, key, value)
+
+    # 4. Değişiklikleri veritabanına mühürle (UPDATE komutunu çalıştır)
+    db.commit()
+    db.refresh(gorev)
     
+    return gorev
 
