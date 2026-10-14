@@ -4,6 +4,9 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.task import Task as DBTask
+from app.models.user import User as DBUser
+from app.security import get_password_hash
+
 
 #1.create api application
 app = FastAPI(title="Task Management API Prototip")
@@ -25,6 +28,19 @@ class TaskResponse(TaskCreate):
 
 class Task(TaskCreate):
     id : int
+
+class UserCreate(BaseModel):
+    email: str
+    username: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    username: str
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
 
 # Güncelleme yaparken kullanıcının tüm alanları göndermesi zorunlu olmasın diye
 # her alanı Optional yapıyoruz.
@@ -107,3 +123,31 @@ def update_task(task_id: int, task_in: TaskUpdate, db: Session = Depends(get_db)
     
     return gorev
 
+@app.post("/users", response_model = UserResponse)
+def create_user(user_in: UserCreate, db: Session = Depends(get_db)):
+    mevcut_kullanici = db.query(DBUser).filter(DBUser.email == user_in.email).first()
+    if mevcut_kullanici:
+        raise HTTPException(status_code=400, detail="Bu email adresi zaten sisteme kayıtlı")
+
+    gizli_sifre = get_password_hash(user_in.password)
+
+    #veritabanı objesi oluştur
+    yeni_kullanici = DBUser(
+        email = user_in.email,
+        username = user_in.username,
+        hashed_password=gizli_sifre
+    )
+    db.add(yeni_kullanici)
+    db.commit()
+    db.refresh(yeni_kullanici)
+
+    return yeni_kullanici
+
+@app.get("/users/{user_id}", response_model = UserResponse)
+def get_user(user_id: int, db:Session = Depends(get_db)):
+    kullanici = db.query(DBUser).filter(DBUser.id == user_id).first()
+
+    if not kullanici:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+    
+    return kullanici

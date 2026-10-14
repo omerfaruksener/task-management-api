@@ -11,6 +11,7 @@ sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 from app.db.session import Base
 from app.models.task import Task
+from app.models.user import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
