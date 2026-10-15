@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -15,63 +15,57 @@ router = APIRouter()
 def create_task(task_in: TaskCreate, db:Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
 
     # 1. Pydantic'ten gelen JSON verisini, veritabanı Entity'sine çeviriyoruz
-    yeni_gorev = DBTask(**task_in.model_dump(),owner_id=current_user.id)
+    new_task = DBTask(**task_in.model_dump(),owner_id=current_user.id)
     
     # 2. C#'taki _context.Tasks.Add(yeni_gorev) işlemi
-    db.add(yeni_gorev)
+    db.add(new_task)
 
     # 3. C#'taki _context.SaveChanges() işlemi (Fiziksel olarak PostgreSQL'e yazar)
     db.commit()
 
     # 4. Veritabanının oluşturduğu ID ve Tarih bilgilerini almak için objeyi güncelleriz
-    db.refresh(yeni_gorev)
+    db.refresh(new_task)
     
-    return yeni_gorev
+    return new_task
 
 @router.get("/", response_model=List[TaskResponse])
-def get_tasks(db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
-    # Bütün görevleri veritabanından çek (SELECT * FROM tasks)
-    gorevler = db.query(DBTask).filter(DBTask.owner_id == current_user.id).all()
-    return gorevler
+def get_tasks(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    # DİKKAT: .filter(Task.owner_id == current_user.id) ile güvenlik duvarı çektik
+    tasks = db.query(DBTask).filter(DBTask.owner_id == current_user.id).all()
+    return tasks
 
 @router.get("/{task_id}", response_model=TaskResponse)
-def get_task(task_id: int, db:Session = Depends(get_db)):
+def get_task(task_id: int, db:Session = Depends(get_db),current_user = Depends(get_current_user)):
     # Belirli bir ID'ye sahip görevi bul
-    gorev = db.query(DBTask).filter(DBTask.id == task_id).first()
+    task = db.query(DBTask).filter(DBTask.id == task_id, DBTask.owner_id == current_user.id).first()
 
-    if not gorev:
+    if not task:
         raise HTTPException(status_code=404,detail="Görev bulunamadı")
-    return gorev
+    return task
 
-@router.delete("/tasks/{task_id}")
-def delete_task(task_id: int, db:Session = Depends(get_db)):
-    gorev = db.query(DBTask).filter(DBTask.id == task_id).first()
-
-    if not gorev:
-        raise HTTPException(status_code=404, detail="Silinecek görev bulunamadı")
-
-    db.delete(gorev)
+@router.delete("/{task_id}")
+def delete_task(task_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    task = db.query(DBTask).filter(DBTask.id == task_id, DBTask.owner_id == current_user.id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Görev bulunamadı veya silme yetkiniz yok")
+    
+    db.delete(task)
     db.commit()
 
     return {"message": f"Görev {task_id} başarıyla silindi."}
 
-@router.patch("/tasks/{task_id}", response_model=TaskResponse)
-def update_task(task_id: int, task_in: TaskUpdate, db: Session = Depends(get_db)):
-    gorev = db.query(DBTask).filter(DBTask.id == task_id).first()
-
-    if not gorev:
-        raise HTTPException(status_code=404, detail = "Güncellenecek görev bulunamadı")
-
-    # 2. Pydantic şablonundan sadece kullanıcının değiştirmek istediği (doldurduğu) alanları al
-    # exclude_unset=True, "kullanıcının boş bıraktığı (göndermediği) alanları yoksay" demektir.
-    update_data = task_in.model_dump(exclude_unset=True)
-
-    # 3. Gelen yeni verileri, veritabanındaki mevcut objenin (gorev) üzerine yaz
-    for key, value in update_data.items():
-        setattr(gorev, key, value)
-
-    # 4. Değişiklikleri veritabanına mühürle (UPDATE komutunu çalıştır)
-    db.commit()
-    db.refresh(gorev)
+@router.patch("/{task_id}", response_model=TaskResponse)
+def update_task(task_id: int, task_in: TaskUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    # Önce görevi ve sahipliği kontrol et
+    task = db.query(DBTask).filter(DBTask.id == task_id, DBTask.owner_id == current_user.id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Görev bulunamadı veya güncelleme yetkiniz yok")
     
-    return gorev
+    # Sadece gönderilen (None olmayan) alanları güncelle
+    update_data = task_in.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(task, key, value)
+        
+    db.commit()
+    db.refresh(task)
+    return task
