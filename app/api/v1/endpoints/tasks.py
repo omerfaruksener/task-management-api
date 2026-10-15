@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.db.session import get_db
 from app.models.task import Task as DBTask
 from app.models.user import User as DBUser
-from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
+from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate, TaskStatus, TaskPriority
 from app.core.security import get_current_user
 
 router = APIRouter()
@@ -29,9 +29,32 @@ def create_task(task_in: TaskCreate, db:Session = Depends(get_db), current_user:
     return new_task
 
 @router.get("/", response_model=List[TaskResponse])
-def get_tasks(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    # DİKKAT: .filter(Task.owner_id == current_user.id) ile güvenlik duvarı çektik
-    tasks = db.query(DBTask).filter(DBTask.owner_id == current_user.id).all()
+def get_tasks(
+    db: Session = Depends(get_db), 
+    current_user = Depends(get_current_user),
+    status: Optional[TaskStatus] = Query(None, description="Duruma göre filtrele"),
+    priority: Optional[TaskPriority] = Query(None, description="Önceliğe göre filtrele"),
+    # Sayfalama (Pagination) parametreleri
+    page: int = Query(1, ge=1, description="Sayfa numarası (En az 1)"),
+    page_size: int = Query(10, ge=1, le=100, description="Sayfa başı kayıt sayısı (Max 100)")
+):
+    # 1. Temel sorguyu oluştur (Sadece kullanıcının kendi görevleri)
+    query = db.query(DBTask).filter(DBTask.owner_id == current_user.id)
+
+    # 2. Eğer URL'den status gönderildiyse sorguya ekle
+    if status:
+        query = query.filter(DBTask.status == status)
+
+    # 3. Eğer URL'den priority gönderildiyse sorguya ekle
+    if priority:
+        query = query.filter(DBTask.priority == priority)
+
+    # 4. Sayfalama (Limit ve Offset) hesapla
+    skip = (page - 1) * page_size
+
+    # 5. Son sorguyu veritabanına gönder ve verileri çek
+    tasks = query.offset(skip).limit(page_size).all()
+
     return tasks
 
 @router.get("/{task_id}", response_model=TaskResponse)
