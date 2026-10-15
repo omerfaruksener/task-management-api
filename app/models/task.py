@@ -12,3 +12,4 @@ class Task(Base):
     priority = Column(String, default="medium")
     created_at = Column(DateTime, default=datetime.utcnow)
     owner_id = Column(Integer, ForeignKey("users.id"))
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable = True)

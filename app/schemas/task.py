@@ -20,6 +20,7 @@ class TaskCreate(BaseModel):
     description: Optional[str] = None
     status: TaskStatus = TaskStatus.todo
     priority: TaskPriority = TaskPriority.medium
+    project_id : Optional[int] = None
 
 # Güncelleme yaparken kullanıcının tüm alanları göndermesi zorunlu olmasın diye
 # her alanı Optional yapıyoruz.
@@ -34,3 +35,4 @@ class TaskResponse(TaskCreate):
     id:int
     owner_id: int
     model_config = ConfigDict(from_attributes=True)
+    project_id: Optional[int] = None
