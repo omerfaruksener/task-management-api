@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from datetime import datetime
 from app.db.session import Base
 
@@ -11,3 +11,4 @@ class Task(Base):
     status = Column(String, default="todo")
     priority = Column(String, default="medium")
     created_at = Column(DateTime, default=datetime.utcnow)
+    owner_id = Column(Integer, ForeignKey("users.id"))
