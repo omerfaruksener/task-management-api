@@ -7,12 +7,22 @@ from app.models.task import Task as DBTask
 from app.models.user import User as DBUser
 from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate, TaskStatus, TaskPriority
 from app.core.security import get_current_user
+from app.models.project import Project
 
 router = APIRouter()
 
 #response_model=TaskResponse ekledik
 @router.post("/", response_model=TaskResponse)
 def create_task(task_in: TaskCreate, db:Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
+
+    # EĞER KULLANICI BİR PROJE ID GÖNDERDİYSE, O PROJENİN VARLIĞINI KONTROL ET
+    if task_in.project_id is not None:
+        project = db.query(Project).filter(Project.id == task_in.project_id).first()
+        if not project:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Hata: {task_in.project_id} ID'li proje bulunamadı. Lütfen geçerli bir proje ID'si girin."
+            )
 
     # 1. Pydantic'ten gelen JSON verisini, veritabanı Entity'sine çeviriyoruz
     new_task = DBTask(**task_in.model_dump(),owner_id=current_user.id)
