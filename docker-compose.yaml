@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  #1. Veritabanı Servisimşiz
+    db:
+      image: postgres:15-alpine
+      container_name: task_db
+      restart: always
+      environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: task_management
+      ports:
+        - "5433:5432"
+      volumes:
+        # Kalıcı Veri (Named Volume): Konteyner silinse bile veriler pg_data içinde saklanır
+        - pg_data:/var/lib/postgresql/data
+
+    # 2. FastAPI Servisimiz
+    api:
+      build: . # bu klasördeki dockerfile kullan
+      container_name: task_api
+      restart: always
+      ports:
+        - "8000:8000"
+      env_file:
+        - .env # eğer gizli değişken varsa buradan okur
+      depends_on:
+        - db # Önce veritabanı konteynerinin ayağa kalkmasını bekle
+
+# Kullanacağımız isimlendirilmiş volume'u en altta deklare ediyoruz
+volumes:
+  pg_data:
