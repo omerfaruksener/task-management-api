@@ -1,53 +1,44 @@
 Task Management API
 
-FastAPI ve PostgreSQL kullanılarak geliştirilmiş; JWT kimlik doğrulaması, proje-görev ilişkileri yönetimi ve uçtan uca otomatik test (Pytest) altyapısına sahip kurumsal düzeyde REST API.
+FastAPI ve PostgreSQL kullanılarak geliştirilmiş; JWT kimlik doğrulaması, proje-görev ilişkileri yönetimi ve uçtan uca otomatik test (Pytest) altyapısına sahip kurumsal düzeyde REST API. Proje, Docker ve Docker Compose kullanılarak tamamen izole bir konteyner mimarisi üzerinde çalışacak şekilde tasarlanmıştır.
 
 Teknolojiler
 
-Python 3
-FastAPI (Web framework)
-Uvicorn (ASGI sunucu)
-PostgreSQL & SQLAlchemy (Veritabanı ve ORM)
-Pydantic (Veri doğrulama ve DTO)
-Pytest (Otomatik API testleri)
-JWT & Passlib (Güvenlik ve şifreleme)
+* **Backend:** Python 3.12, FastAPI
+* **Veritabanı & ORM:** PostgreSQL 15 (Alpine), SQLAlchemy
+* **Veri Doğrulama:** Pydantic
+* **Test:** Pytest
+* **Güvenlik:** JWT & Passlib (Bcrypt)
+* **Altyapı:** Docker & Docker Compose
 
-Kurulum ve Çalıştırma
+## Docker ile Kurulum (Önerilen)
 
-Repoyu klonlayın:
+Projeyi bilgisayarınızda hiçbir Python bağımlılığı kurmadan, sadece Docker kullanarak saniyeler içinde ayağa kaldırabilirsiniz.
 
+**1. Repoyu klonlayın:**
+bash
 git clone <repo_url>
 cd task-management-api
+docker compose exec api pytest
 
 
-Sanal ortamı kurun:
+## Docker Kullanmadan
 
+# Sanal ortamı kurun ve aktif edin:
 python -m venv venv
+# Linux/Mac:
+source venv/bin/activate
+# Windows:
+.\venv\Scripts\activate
 
-
-Sanal ortamı aktif edin:
-
-Linux/Mac: source venv/bin/activate
-Windows: .\venv\Scripts\activate
-
-
-Paketleri yükleyin:
-
+# Paketleri yükleyin
 pip install -r requirements.txt
 
-
-Veritabanı tablolarını oluşturun (Alembic kullanıyorsanız):
-
+# Veritabanı tablolarını oluşturun
 alembic upgrade head
 
-
-Uygulamayı çalıştırın:
-
+# Uygulamayı çalıştırın
 uvicorn app.main:app --reload
 
-
-Testleri Çalıştırma
-
-Projenin uçtan uca testlerini çalıştırmak için terminalde aşağıdaki komutu girmeniz yeterlidir:
-
+# Testleri çalıştırın
 pytest

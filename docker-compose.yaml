@@ -7,14 +7,22 @@ services:
       container_name: task_db
       restart: always
       environment:
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgres
-        POSTGRES_DB: task_management
+        POSTGRES_USER: ${POSTGRES_USER:-postgres}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+        POSTGRES_DB: ${POSTGRES_DB:-task_management}
       ports:
         - "5433:5432"
       volumes:
         # Kalıcı Veri (Named Volume): Konteyner silinse bile veriler pg_data içinde saklanır
         - pg_data:/var/lib/postgresql/data
+      healthcheck:
+        test:
+          - CMD-SHELL
+          - pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+        interval: 5s
+        timeout: 5s
+        retries: 5
+        start_period: 10s
 
     # 2. FastAPI Servisimiz
     api:
@@ -26,7 +34,9 @@ services:
       env_file:
         - .env # eğer gizli değişken varsa buradan okur
       depends_on:
-        - db # Önce veritabanı konteynerinin ayağa kalkmasını bekle
+        db: # Önce veritabanı konteynerinin ayağa kalkmasını bekle
+            condition: service_healthy
+          
 
 # Kullanacağımız isimlendirilmiş volume'u en altta deklare ediyoruz
 volumes:

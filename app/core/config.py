@@ -7,7 +7,7 @@ class Settings:
     # kendi DATABASE_URL adresinizle (kullanıcı adı, şifre ve db adınız) değiştirin!
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL", 
-        "postgresql://postgres:postgres@localhost:5432/task_management"
+        "postgresql://postgres:postgres@db:5432/task_management"
     )
     
     # JWT işlemlerinde kullanacağımız gizli anahtarımız da burada duracak
