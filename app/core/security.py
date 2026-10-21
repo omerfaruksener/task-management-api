@@ -17,7 +17,6 @@ def get_password_hash(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-SECRET_KEY="benim_cok_gizli_anahtarim"
 ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

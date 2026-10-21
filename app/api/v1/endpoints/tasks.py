@@ -17,11 +17,11 @@ def create_task(task_in: TaskCreate, db:Session = Depends(get_db), current_user:
 
     # EĞER KULLANICI BİR PROJE ID GÖNDERDİYSE, O PROJENİN VARLIĞINI KONTROL ET
     if task_in.project_id is not None:
-        project = db.query(Project).filter(Project.id == task_in.project_id).first()
+        project = db.query(Project).filter(Project.id == task_in.project_id, Project.owner_id == current_user.id).first()
         if not project:
             raise HTTPException(
                 status_code=404, 
-                detail=f"Hata: {task_in.project_id} ID'li proje bulunamadı. Lütfen geçerli bir proje ID'si girin."
+                detail=f"Hata: {task_in.project_id} ID'li proje bulunamadı veya yetkiniz yok. Lütfen geçerli bir proje ID'si girin."
             )
 
     # 1. Pydantic'ten gelen JSON verisini, veritabanı Entity'sine çeviriyoruz

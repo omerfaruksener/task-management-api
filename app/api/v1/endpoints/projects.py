@@ -22,7 +22,7 @@ def create_project(project_in:ProjectCreate, db: Session = Depends(get_db), curr
 #2.list of project
 @router.get("/", response_model= List[ProjectResponse])
 def get_projects(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    projects = db.query(Project).filter(Project.pwner_id == current_user.id).all()
+    projects = db.query(Project).filter(Project.owner_id == current_user.id).all()
     return projects
 
 

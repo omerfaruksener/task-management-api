@@ -2,8 +2,6 @@ from fastapi import FastAPI
 from app.db.session import engine, Base
 from app.api.v1.router import api_router
 
-# Veritabanı tablolarını fiziksel olarak oluşturuyoruz
-Base.metadata.create_all(bind=engine)
 
 #1.create api application
 app = FastAPI(title="Task Management API Prototip")

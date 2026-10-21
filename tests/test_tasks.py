@@ -3,7 +3,7 @@ from app.main import app
 
 client = TestClient(app)
 
-def test_create_task_with_project():
+def test_create_task_with_project(client, test_user):
     """
     Sisteme giriş yapar, yeni bir proje oluşturur ve 
     o projenin ID'sini kullanarak yeni bir görev (task) ekler.
@@ -11,8 +11,8 @@ def test_create_task_with_project():
     """
     #1.sisteme giriş yap 
     login_data = {
-        "username" : "test",
-        "password" : "test"
+        "username" : "test_user@example.com",
+        "password" : "test_password"
     }
 
     login_response = client.post("/api/v1/login", data = login_data)

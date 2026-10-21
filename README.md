@@ -16,9 +16,17 @@ Teknolojiler
 Projeyi bilgisayarınızda hiçbir Python bağımlılığı kurmadan, sadece Docker kullanarak saniyeler içinde ayağa kaldırabilirsiniz.
 
 **1. Repoyu klonlayın:**
-bash
-git clone <repo_url>
+
+git clone https://github.com/omerfaruksener/task-management-api.git
 cd task-management-api
+
+cp .env.example .env
+# .env dosyasını açıp kendi şifrelerinizi ve SECRET_KEY bilginizi girin
+
+docker compose config
+docker compose up --build -d
+
+docker compose exec api alembic upgrade head
 docker compose exec api pytest
 
 
