@@ -1,18 +1,17 @@
-import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+
+    #.env dosyasını otomatik okuması için gerekli modern pydantic yapılandırması
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
+
     PROJECT_NAME: str = "Task Management API"
     SECRET_KEY: str
-    
-    # DİKKAT: Aşağıdaki URL'yi app/db/session.py dosyanızdaki 
-    # kendi DATABASE_URL adresinizle (kullanıcı adı, şifre ve db adınız) değiştirin!
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", 
-        "postgresql://postgres:postgres@db:5432/task_management"
-    )
-    
-    # JWT işlemlerinde kullanacağımız gizli anahtarımız da burada duracak
+    DATABASE_URL: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 

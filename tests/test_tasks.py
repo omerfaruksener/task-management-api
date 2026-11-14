@@ -1,8 +1,6 @@
 from fastapi.testclient import TestClient 
 from app.main import app
 
-client = TestClient(app)
-
 def test_create_task_with_project(client, test_user):
     """
     Sisteme giriş yapar, yeni bir proje oluşturur ve 

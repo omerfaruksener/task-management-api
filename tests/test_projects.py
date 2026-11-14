@@ -1,10 +1,8 @@
 from fastapi.testclient import TestClient
 from app.main import app
 
-#sahte istek istemcisi
-client = TestClient(app)
 
-def test_get_projects_unauthorized():
+def test_get_projects_unauthorized(client):
     """
     Kullanıcı giriş yapmadan (token olmadan) projelere erişmeye çalıştığında
     sistemin 401 (Unauthorized) hatası verip vermediğini test eder.
