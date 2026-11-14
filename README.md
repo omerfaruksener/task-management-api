@@ -19,7 +19,6 @@ Projeyi bilgisayarınızda hiçbir Python bağımlılığı kurmadan, sadece Doc
 
 git clone https://github.com/omerfaruksener/task-management-api.git
 cd task-management-api
-
 cp .env.example .env
 # .env dosyasını açıp kendi şifrelerinizi ve SECRET_KEY bilginizi girin
 
